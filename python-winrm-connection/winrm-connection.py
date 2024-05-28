@@ -3,8 +3,6 @@
 #
 # Author:  Habibul Bashar Ahmed [M327731]
 # Contact: Monitoring Team [ICINGA]
-# Assignment Group: MONITORING_E2E MONITORING
-# Mail Group: R130359@merckgroup.com
 
 import sys
 import argparse
@@ -15,8 +13,8 @@ import winrm
 __author__ = 'Habibul Bashar Ahmed'
 __version__ = '01'
 
-DESCRIPTION = """This script establishes a WinRM connection to Windows machines, 
-                 allowing for the remote execution of commands. It supports both 
+DESCRIPTION = """This script establishes a WinRM connection to Windows machines,
+                 allowing for the remote execution of commands. It supports both
                  Basic Authentication and Domain Authentication for secure access."""
 
 
@@ -109,11 +107,11 @@ def create_winrm_session(endpoint, USERNAME, PASSWORD, TRANSPORT, TIMEOUT):
 
     except Exception as e:
         print(f"CONNECTION FAILED: {e}")
-    
 
 
-# Execute Command    
-def execute_command(session, command=None):
+
+# Execute Command
+def execute_command(session, command):
 
     try:
         # Run a Shell command
@@ -123,11 +121,11 @@ def execute_command(session, command=None):
     # Handle transport errors (e.g., network issues)
     except winrm.exceptions.WinRMTransportError as e:
         parse_results_nagios_format(error=e, error_exception="Transport Error:")
-    
+
     # Handle authentication errors
     except winrm.exceptions.InvalidCredentialsError as e:
         parse_results_nagios_format(error=e, error_exception="Invalid Credentials:")
-    
+
     # Handle other generic errors
     except Exception as e:
         # print("An error occurred:", str(e))
@@ -137,7 +135,7 @@ def execute_command(session, command=None):
 
 # Parse Results or Errors
 def parse_results_nagios_format(result=None, error=None, error_exception=None):
-    
+
     if result:
         if result.status_code == 0:
             print(result.std_out.decode('utf-8').strip())
@@ -146,10 +144,10 @@ def parse_results_nagios_format(result=None, error=None, error_exception=None):
             print(result.std_out.decode('utf-8').strip())
             print(result.std_err.decode('utf-8').strip())
             sys.exit(result.status_code)
-    
+
     elif error:
         print(error_exception, str(error))
-    
+
     else:
         print("Code review needed. Contact:Habibul Bashar Ahmed")
 
@@ -162,12 +160,12 @@ if __name__=='__main__':
 
     # Creating a dictionary
     arguments = results.__dict__
-    
+
     # Https or Not
     if (arguments['port'] == 5986) and (arguments['protocol'] == 'https'):
         # Creating a Endpoint string
         endpoint = f"https://{arguments['host']}:5986/wsman"
-    
+
     else:
         # Creating a Endpoint string
         endpoint = f"http://{arguments['host']}:5985/wsman"
@@ -177,16 +175,12 @@ if __name__=='__main__':
     TRANSPORT = arguments['transport']
     TIMEOUT = arguments['operation_timeout_sec']
     COMMAND = arguments['command']
-    print(COMMAND.split(' '))
 
-    # Call winrm session 
-    # if COMMAND:
-    #     session_instance = create_winrm_session(endpoint, USERNAME, PASSWORD, TRANSPORT, TIMEOUT)
-    #     if session_instance:
-    #         r = execute_command(session_instance, COMMAND)
-    # else:
-    #     print(f"No Command provided. Use [--help] for display usage.")
-    #     sys.exit(2)
-    
-    
-
+    # Call winrm session
+    if COMMAND:
+        session_instance = create_winrm_session(endpoint, USERNAME, PASSWORD, TRANSPORT, TIMEOUT)
+        if session_instance:
+            r = execute_command(session_instance, COMMAND)
+    else:
+        print(f"No Command provided. Use [--help] for display usage.")
+        sys.exit(2)
